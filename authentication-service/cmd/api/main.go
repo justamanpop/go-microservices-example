@@ -17,8 +17,8 @@ import (
 const webPort = "80"
 
 type Config struct {
-	Db     *sql.DB
-	Models data.Models
+	Repo   data.Repository
+	Client *http.Client
 }
 
 func main() {
@@ -30,9 +30,9 @@ func main() {
 	}
 
 	app := Config{
-		Db:     conn,
-		Models: data.New(conn),
+		Client: &http.Client{},
 	}
+	app.setupRepository(conn)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%s", webPort),
@@ -78,4 +78,9 @@ func connectToDb() *sql.DB {
 		log.Println("Retrying in 2 seconds")
 		time.Sleep(2 * time.Second)
 	}
+}
+
+func (cfg *Config) setupRepository(conn *sql.DB) {
+	db := data.NewPostgresRepository(conn)
+	cfg.Repo = db
 }
